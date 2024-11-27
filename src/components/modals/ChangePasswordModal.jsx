@@ -15,7 +15,6 @@ const ChangePasswordModal = ({ close }) => {
       setError("Fields cannot be empty");
       return;
     } else {
-      console.log("FORM DATA: ", formData);
       if (
         formData.oldPassword === formData.newPassword ||
         formData.oldPassword === formData.confirmPassword
@@ -31,7 +30,6 @@ const ChangePasswordModal = ({ close }) => {
           "put",
           formData
         );
-        console.log("RESPONSE: ", response);
         if (response.success) {
           close();
         } else {

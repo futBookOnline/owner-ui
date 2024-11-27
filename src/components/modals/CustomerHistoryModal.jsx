@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { useRelatedApi } from "../../helpers/api.helper";
+import ReservationDetailModal from "./ReservationDetailModal.jsx";
 
-const CustomerHistoryModal = ({ handleClose, customer }) => {
-  console.log("CUSTOMER: ", customer);
+const CustomerHistoryModal = ({ handleModalClose, customer }) => {
   const venueId = localStorage.getItem("venueId");
+  const isRegisteredUser = customer.isRegisteredUser || false;
+  const user = customer.user;
+  const customerId = customer.id;
   const [colDefs, setColDefs] = useState([
     { field: "date" },
     { field: "time" },
@@ -19,13 +22,8 @@ const CustomerHistoryModal = ({ handleClose, customer }) => {
     };
   }, []);
 
-  const [customerHistory, setCustomerHistory] = useState(null)
+  const [customerHistory, setCustomerHistory] = useState(null);
   const fetchCustomerHistory = async () => {
-    const isRegisteredUser = customer.isRegisteredUser || false;
-    console.log("CUSTOMER: ", customer);
-    const user = customer.user;
-    console.log("USER: ", user);
-    console.log("IS REGISTERED USER: ", isRegisteredUser);
     const response = await useRelatedApi(
       `customers/history/${venueId}?isRegistered=${isRegisteredUser}&user=${JSON.stringify(
         user
@@ -34,7 +32,6 @@ const CustomerHistoryModal = ({ handleClose, customer }) => {
       ""
     );
     if (response?.success) {
-      console.log("CUSTOMERS HISTORY RESPONSE: ", response.data || 0);
       setCustomerHistory(response.data || []);
     }
   };
@@ -43,14 +40,92 @@ const CustomerHistoryModal = ({ handleClose, customer }) => {
     fetchCustomerHistory();
   }, []);
 
-  const handleSubmit = async () => {
-    alert("SUBMITTED");
+  const [reservationModalShow, setReservationModalShow] = useState({
+    visible: false,
+    data: null,
+  });
+  const handleShow = async (id) => {
+    setReservationModalShow((prev) => ({
+      ...prev,
+      visible: true,
+      reservationId: id,
+    }));
   };
+
+  const [alert, setAlert] = useState("");
+  const handleRemove = async () => {
+    const response = await useRelatedApi(
+      `customers/${customerId}`,
+      "delete",
+      ""
+    );
+    if (response.success) {
+      setAlert("succeed");
+      setTimeout(() => {
+        setAlert("");
+        handleModalClose();
+      }, 2000);
+    } else {
+      setAlert("failed");
+      setTimeout(() => {
+        setAlert("");
+      }, 2000);
+    }
+  };
+  const handleClose = () =>
+    setReservationModalShow((prev) => ({ ...prev, visible: false }));
+
   return (
     <div
       className="modal show fade modal-lg"
       style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.6)" }}
     >
+      {/* Reservation Modal */}
+      {reservationModalShow.visible && (
+        <ReservationDetailModal
+          handleClose={() => handleClose()}
+          reservationId={reservationModalShow.reservationId}
+          isFromCustomerModal={true}
+        />
+      )}
+      {/* Customer Removal Alert */}
+      {alert === "failed" ? (
+        <div
+          className="z-3 alert alert-danger alert-dismissible fade show position-fixed top-0 end-0 w-auto"
+          role="alert"
+        >
+          <strong className="me-2">
+            <i className="fa-regular fa-circle-xmark alert-danger me-2"></i>
+            Failed!
+          </strong>
+          Could not remove customer.
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+      ) : alert === "succeed" ? (
+        <div
+          className="z-3 alert alert-success alert-dismissible fade show position-fixed top-0 end-0  w-auto"
+          role="alert"
+        >
+          <strong>
+            <i className="fa-solid fa-circle-check me-2 alert-success"></i>
+            Success!
+          </strong>
+          CUstomer removed.
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+      ) : (
+        ""
+      )}
       <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">
@@ -59,17 +134,28 @@ const CustomerHistoryModal = ({ handleClose, customer }) => {
             <button
               type="button"
               className="btn-close"
-              onClick={handleClose}
+              onClick={handleModalClose}
             ></button>
           </div>
           <div className="modal-body">
-            <div
-              className="alert alert-success d-flex flex-column text-success"
-              role="alert"
-            >
-              <h5>{customer.user.fullName}</h5>
-              <span>Email: {customer.user.email}</span>
-              <span>Contact: {customer.user.contact}</span>
+            <div className="alert alert-success d-flex align-items-end justify-content-between">
+              <div
+                className=" d-flex flex-column text-success flex-3"
+                role="alert"
+              >
+                <h5>{customer.user.fullName}</h5>
+                <span>Email: {customer.user.email}</span>
+                <span>Contact: {customer.user.contact}</span>
+              </div>
+              <div className="flex-1">
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm form-control"
+                  onClick={handleRemove}
+                >
+                  Remove Customer
+                </button>
+              </div>
             </div>
             <div className={"ag-theme-alpine"} style={{ height: "60vh" }}>
               <AgGridReact
@@ -79,9 +165,9 @@ const CustomerHistoryModal = ({ handleClose, customer }) => {
                 paginationPageSize={500}
                 paginationPageSizeSelector={[200, 500, 1000]}
                 defaultColDef={defaultColDef}
-                // onRowDoubleClicked={(params) =>
-                //   handleShow("edit", params.data.id)
-                // }
+                onRowDoubleClicked={(params) =>
+                  handleShow(params.data.reservationId)
+                }
                 overlayLoadingTemplate={
                   '<span class="ag-overlay-loading-center">Please wait while your data is loading...</span>'
                 }
@@ -91,16 +177,8 @@ const CustomerHistoryModal = ({ handleClose, customer }) => {
                 autoSizeStrategy={{
                   type: "fitGridWidth",
                 }}
-                // onRowDoubleClicked={() => handleShow()}
               />
             </div>
-            {/* <button
-                  type="button"
-                  className="btn btn-success btn-sm form-control"
-                  onClick={handleSubmit}
-                >
-                  Add
-                </button> */}
           </div>
         </div>
       </div>

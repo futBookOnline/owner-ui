@@ -6,7 +6,6 @@ import { formatDateToNepal } from "../helpers/utils.helper";
 
 const Dashboard = () => {
   const venueId = localStorage.getItem("venueId");
-  console.log("ISO DATE:", new Date())
   const now = formatDateToNepal(new Date());
 
   // FETCH RESERVED SLOTS
@@ -17,10 +16,7 @@ const Dashboard = () => {
       "get",
       ""
     );
-    console.log("NOW: ", now)
-    console.log("RESERVED COUNT: ", response)
     if(response?.success && response.data &&  response.data.length > 0){
-      console.log("RESERVED COUNT INSIDE: ", response)
       setReservationsCount(response.data.filter(reservation => reservation.isReserved).length)
     }
   };

@@ -24,7 +24,6 @@ const EditSlotModal = ({ handleClose, slotData, onSubmit }) => {
 
   const handleSubmit = async () => {
     const customerInfo = selectedCustomer.length >0 && JSON.parse(selectedCustomer);
-    console.log("CUSTOMER INFO: ", customerInfo)
     let payLoad = {
       slot: slotData._id,
       futsal: venueId,
@@ -46,7 +45,6 @@ const EditSlotModal = ({ handleClose, slotData, onSubmit }) => {
         contact: customerInfo.contact,
       };
     }
-    console.log("PAYLOAD: ", payLoad)
     const response = await useRelatedApi("reservations/", 'post', payLoad)
     if(response){
       handleClose()

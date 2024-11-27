@@ -29,7 +29,6 @@ const Customer = () => {
     const response = await useRelatedApi(`customers/${venueId}`, "get", "");
 
     if (response?.success) {
-      console.log("CUSTOMERS RESPONSE: ", response.data || 0);
       setCustomers(response.data || []);
     }
   };
@@ -41,7 +40,10 @@ const Customer = () => {
   const handleShow = (user) => {
     setShow((prev) => ({ ...prev, visible: true, data: user }));
   };
-  const handleClose = () => setShow((prev) => ({ ...prev, visible: false }));
+  const handleClose = () => {
+    setShow((prev) => ({ ...prev, visible: false }));
+    fetchCustomers();
+  };
 
   return (
     <Layout>
@@ -49,7 +51,7 @@ const Customer = () => {
       <hr />
       {show.visible && (
         <CustomerHistoryModal
-          handleClose={() => handleClose()}
+          handleModalClose={() => handleClose()}
           customer={show.data}
         />
       )}
@@ -79,10 +81,12 @@ const Customer = () => {
                 handleShow(
                   params.data.isRegistered
                     ? {
+                        id: params.data.id,
                         user: params.data.user,
                         isRegisteredUser: params.data.isRegistered,
                       }
                     : {
+                        id: params.data.id,
                         user: {
                           fullName: params.data.fullName,
                           email: params.data.email,

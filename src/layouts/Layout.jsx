@@ -11,7 +11,6 @@ const Layout = ({ children }) => {
       "get",
       ""
     );
-    console.log("FUTSAL DATA: ", response);
     if (response?.success) {
       localStorage.setItem("venueId", response.data.id)
       setFutsal(response.data);
