@@ -2,55 +2,34 @@ import React, { useEffect, useState } from "react";
 import { useRelatedApi } from "../../helpers/api.helper";
 
 const EditSlotModal = ({ handleClose, slotData, onSubmit }) => {
-  const venueId = localStorage.getItem("venueId");
-  const [showGuestForm, setShowGuestForm] = useState(false);
-  const [formData, setFormData] = useState(null);
-  const [selectedCustomer, setSelectedCustomer] = useState({});
-  const [customer, setCustomer] = useState();
-  const fetchCustomers = async () => {
-    const response = await useRelatedApi(
-      `customers/${venueId}`,
-      "get",
-      ""
-    );
-    if (response) {
-      if (response.status === 404) return setCustomer([]);
-      setCustomer(response.data);
-    }
-  };
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
-
-  const handleSubmit = async () => {
-    const customerInfo = selectedCustomer.length >0 && JSON.parse(selectedCustomer);
-    let payLoad = {
-      slot: slotData._id,
-      futsal: venueId,
-    };
-    if (showGuestForm) {
-      payLoad.guestUser = {
-        fullName: formData.fullName,
-        email: formData.email,
-        contact: formData.contact,
-      };
-    }
-      else if(customerInfo.isRegistered){
-        payLoad.user = customerInfo.id;
-      
+  const numberRegex = /^\d+$/;
+  const price =
+    slotData.isWeekend || slotData.isHoliday
+      ? slotData.dynamicPrice
+      : slotData.basePrice;
+  const isHoliday = slotData.Holiday;
+  const isWeekend = slotData.isWeekend;
+  const [formData, setFormData] = useState({ price });
+  const slotId = slotData._id;
+  const [error, setError] = useState(false);
+  const handleUpdate = async () => {
+    if (
+      !formData.price ||
+      (formData.price && !numberRegex.test(formData.price))
+    ) {
+      setError(true);
     } else {
-      payLoad.guestUser = {
-        fullName: customerInfo.fullName,
-        email: customerInfo.email,
-        contact: customerInfo.contact,
-      };
+      const payLoad =
+        formData.day === "Normal"
+          ? { basePrice: formData.price, isHoliday: false, isWeekend: false }
+          : formData.day === "Weekend"
+          ? { dynamicPrice: formData.price, isWeekend: true, isHoliday: false }
+          : { dynamicPrice: formData.price, isWeekend: false, isHoliday: true };
+      const response = await useRelatedApi(`slots/${slotId}`, "put", payLoad);
+      if (response.success) {
+        onSubmit();
+      }
     }
-    const response = await useRelatedApi("reservations/", 'post', payLoad)
-    if(response){
-      handleClose()
-      onSubmit()
-    }
-
   };
 
   return (
@@ -61,8 +40,7 @@ const EditSlotModal = ({ handleClose, slotData, onSubmit }) => {
       <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Slot Info</h5>
-
+            <h5 className="modal-title">Edit Slot</h5>
             <button
               type="button"
               className="btn-close"
@@ -70,118 +48,63 @@ const EditSlotModal = ({ handleClose, slotData, onSubmit }) => {
             ></button>
           </div>
           <div className="modal-body">
-            <div className="text-primary mb-3  ">
+            <div className="text-primary mb-3">
               <h6 className="text-end">{slotData.date}</h6>
               <h6 className="text-end">
                 {slotData.startTime} - {slotData.endTime}
               </h6>
             </div>
-            <div>
-            <p><span className="fw-bold">Day: </span>{slotData.isWeeked ? 'Weekend' : slotData.isHoliday ? 'Holiday' : 'Normal'}</p>
-            <div className="form-floating mb-3">
+            <div className="my-5 py-5">
+              <div className="form-floating mb-3">
+                <select
+                  className="form-control"
+                  id="floatingDay"
+                  placeholder="Day"
+                  defaultValue={
+                    !isHoliday && !isWeekend
+                      ? "Normal"
+                      : isHoliday
+                      ? "Holiday"
+                      : "Weekend"
+                  }
+                  onChange={(event) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      day: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="Normal">Normal</option>
+                  <option value="Holiday">Holiday</option>
+                  <option value="Weekend">Weekend</option>
+                </select>
+                <label htmlFor="floatingDay">Day</label>
+              </div>
+              <div className="form-floating mb-3">
                 <input
                   type="text"
                   className="form-control"
                   id="floatingPrice"
                   placeholder="Price"
-                  value={slotData.isWeeked || slotData.isHoliday ? slotData.dynamicPrice : slotData.basePrice}
-                  onChange={(event) =>
+                  value={formData.price}
+                  onChange={(event) => {
+                    setError(false);
                     setFormData((prev) => ({
                       ...prev,
-                      fullName: event.target.value,
-                    }))
-                  }
+                      price: event.target.value,
+                    }));
+                  }}
                 />
                 <label htmlFor="floatingPrice">Price</label>
-              </div>
-            </div>
-            <div className="form-floating mb-3">
-              <select
-                name=""
-                id="floatingName"
-                className="form-control"
-                value={selectedCustomer && selectedCustomer.fullName}
-                onChange={(event) => setSelectedCustomer(event.target.value)}
-              >
-                <option value="" disabled selected>
-                  Select a customer
-                </option>
-                {customer &&
-                  customer.length > 0 &&
-                  customer.map((option) => (
-                    <option
-                      key={option.customerId}
-                      value={JSON.stringify(option)}
-                    >
-                      {option.fullName}
-                    </option>
-                  ))}
-              </select>
-              <label htmlFor="floatingName">Name</label>
-            </div>
-            <div className="form-group mb-3">
-              <label htmlFor="floatingIsGuest">Is Guest User&nbsp;&nbsp;</label>
-              <input
-                type="checkbox"
-                className=""
-                id="floatingIsGuest"
-                value={formData && formData.date}
-                onChange={() => setShowGuestForm((prev) => !prev)}
-              />
-            </div>
-            <div className={`${showGuestForm ? "d-block" : "d-none"}`}>
-              <div className="form-floating mb-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="floatingGuestName"
-                  placeholder="Fullname"
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      fullName: event.target.value,
-                    }))
-                  }
-                />
-                <label htmlFor="floatingGuestName">Fullname</label>
-              </div>
-              <div className="form-floating mb-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="floatingGuestEmail"
-                  placeholder="Email"
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      email: event.target.value,
-                    }))
-                  }
-                />
-                <label htmlFor="floatingGuestEmail">Email</label>
-              </div>
-              <div className="form-floating mb-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="floatingGuestContact"
-                  placeholder="Contact"
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      contact: event.target.value,
-                    }))
-                  }
-                />
-                <label htmlFor="floatingGuestContact">Contact</label>
+                {error && <small className="text-danger">Invalid price</small>}
               </div>
             </div>
             <button
               type="button"
               className="btn btn-primary form-control"
-              onClick={handleSubmit}
+              onClick={handleUpdate}
             >
-              Confirm Booking
+              Update Slot
             </button>
           </div>
         </div>

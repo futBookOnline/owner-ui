@@ -21,6 +21,12 @@ const ReservationDetailModal = ({
   useEffect(() => {
     fetchReservationDetail();
   }, []);
+  const handleCancellation = async () => {
+    const response = await useRelatedApi(`reservations/${reservationId}`, "delete", '')
+    if(response.success){
+      handleClose()
+    }
+  };
   return (
     <div
       className="modal show fade modal-md"
@@ -41,9 +47,10 @@ const ReservationDetailModal = ({
             ></button>
           </div>
           <div className="modal-body">
-            <table className="table table-borderless border border">
+            <table className="table table-borderless border border caption-top">
+            <caption>Customer Info</caption>
               <tbody>
-              <tr>
+                <tr>
                   <th scope="row">Full Name</th>
                   <td>
                     {reservationDetail?.user
@@ -73,7 +80,8 @@ const ReservationDetailModal = ({
                 </tr>
               </tbody>
             </table>
-            <table className="table table-borderless border">
+            <table className="table table-borderless border caption-top">
+            <caption>Reservation Info</caption>
               <tbody>
                 <tr>
                   <th scope="row">Date</th>
@@ -132,7 +140,11 @@ const ReservationDetailModal = ({
               Close
             </button>
             {!isFromCustomerModal && (
-              <button type="button" className="btn btn-danger">
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleCancellation}
+              >
                 Cancel Reservation
               </button>
             )}

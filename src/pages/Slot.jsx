@@ -5,16 +5,13 @@ import SlotCard from "../components/SlotCard";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { isBefore } from "date-fns";
+import BookSlotModal from "../components/modals/BookSlotModal";
+import { formatDateToNepal } from "../helpers/utils.helper";
 import EditSlotModal from "../components/modals/EditSlotModal";
-import {
-  formatDateToNepal,
-} from "../helpers/utils.helper";
 const Slot = () => {
   const venueId = localStorage.getItem("venueId");
   const [alert, setAlert] = useState("");
-  const [startDate, setStartDate] = useState(
-    formatDateToNepal(new Date())
-  );
+  const [startDate, setStartDate] = useState(formatDateToNepal(new Date()));
 
   const [slots, setSlots] = useState(null);
   const fetchSlots = async () => {
@@ -32,14 +29,25 @@ const Slot = () => {
     fetchSlots();
   }, [startDate]);
 
-  const [show, setShow] = useState({ visible: false, data: null });
-  const handleShow = (slot) => {
-    setShow((prev) => ({ ...prev, visible: true, data: slot }));
+  const [bookSlotShow, setBookSlotShow] = useState({
+    visible: false,
+    data: null,
+  });
+  const handleBookSlotModalShow = (slot) => {
+    setBookSlotShow((prev) => ({ ...prev, visible: true, data: slot }));
   };
-  const handleClose = () => setShow((prev) => ({ ...prev, visible: false }));
-  const handleReservationSubmit = () => {
-    fetchSlots();
+  const handleBookSlotModalClose = () =>
+    setBookSlotShow((prev) => ({ ...prev, visible: false }));
+
+  const [editSlotShow, setEditSlotShow] = useState({
+    visible: false,
+    data: null,
+  });
+  const handleEditSlotModalShow = (slot) => {
+    setEditSlotShow((prev) => ({ ...prev, visible: true, data: slot }));
   };
+  const handleEditSlotModalClose = () =>
+    setEditSlotShow((prev) => ({ ...prev, visible: false }));
 
   const generateSlots = async () => {
     const payload = {
@@ -64,7 +72,11 @@ const Slot = () => {
       setAlert("");
     }, 2000);
   };
-
+  const handleSubmit = () => {
+    handleBookSlotModalClose();
+    handleEditSlotModalClose();
+    fetchSlots();
+  };
   return (
     <Layout>
       <h6>Slots</h6>
@@ -106,11 +118,18 @@ const Slot = () => {
         ""
       )}
       <hr />
-      {show.visible && (
+      {bookSlotShow.visible && (
+        <BookSlotModal
+          handleClose={() => handleBookSlotModalClose()}
+          slotData={bookSlotShow.data}
+          onSubmit={handleSubmit}
+        />
+      )}
+      {editSlotShow.visible && (
         <EditSlotModal
-          handleClose={() => handleClose()}
-          slotData={show.data}
-          onSubmit={handleReservationSubmit}
+          handleClose={() => handleEditSlotModalClose()}
+          slotData={editSlotShow.data}
+          onSubmit={handleSubmit}
         />
       )}
       <div className="py-2">
@@ -139,7 +158,8 @@ const Slot = () => {
                     <SlotCard
                       key={slot._id}
                       slotInfo={slot}
-                      onClick={() => handleShow(slot)}
+                      onBookClick={() => handleBookSlotModalShow(slot)}
+                      onEditClick={() => handleEditSlotModalShow(slot)}
                     />
                   ))}
                 </div>

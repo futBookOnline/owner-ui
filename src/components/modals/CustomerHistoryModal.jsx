@@ -32,7 +32,19 @@ const CustomerHistoryModal = ({ handleModalClose, customer }) => {
       ""
     );
     if (response?.success) {
-      setCustomerHistory(response.data || []);
+      if (!response?.data) {
+        setCustomerHistory([]);
+        return;
+      }
+      const customerHistoryData = response.data.map((cusHistory) => ({
+        date: cusHistory.date,
+        isHoliday: cusHistory.isHoliday ? "Yes" : "No",
+        price: cusHistory.price,
+        reservationId: cusHistory.reservationId,
+        time: cusHistory.time,
+      }));
+      console.log("CUSTOMER HISTORIES: ", response.data);
+      setCustomerHistory(customerHistoryData);
     }
   };
 
@@ -42,7 +54,7 @@ const CustomerHistoryModal = ({ handleModalClose, customer }) => {
 
   const [reservationModalShow, setReservationModalShow] = useState({
     visible: false,
-    data: null,
+    reservationId: null,
   });
   const handleShow = async (id) => {
     setReservationModalShow((prev) => ({

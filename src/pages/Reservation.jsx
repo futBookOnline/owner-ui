@@ -61,7 +61,10 @@ const Reservation = () => {
   const handleShow = (id) => {
     setShow((prev) => ({ ...prev, visible: true, reservationId: id }));
   };
-  const handleClose = () => setShow((prev) => ({ ...prev, visible: false }));
+  const handleClose = () => {
+    setShow((prev) => ({ ...prev, visible: false }));
+    fetchReservations();
+  };
   return (
     <Layout>
       <h6>Reservations</h6>
@@ -108,9 +111,7 @@ const Reservation = () => {
                 autoSizeStrategy={{
                   type: "fitGridWidth",
                 }}
-                onRowDoubleClicked={(params) => 
-                  handleShow(params.data.id)
-                }
+                onRowDoubleClicked={(params) => handleShow(params.data.id)}
               />
             </div>
           </div>
