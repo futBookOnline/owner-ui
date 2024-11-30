@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Layout from "../layouts/Layout";
 import { useRelatedApi } from "../helpers/api.helper";
 import ChangePasswordModal from "../components/modals/ChangePasswordModal";
+import MapModal from "../components/modals/MapModal";
 const userId = localStorage.getItem("userId");
 const Profile = () => {
   const [futsal, setFutsal] = useState(null);
@@ -44,10 +45,26 @@ const Profile = () => {
     }
   };
 
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const handleChangePasswordModalClose = () => {
+    fetchFutsalData();
+    setShowChangePasswordModal(false);
+  };
+
+  const [showMapModal, setShowMapModal] = useState(false);
+  const handleMapModalClose = () => {
+    fetchFutsalData();
+    setShowMapModal(false);
+  };
+  
   return (
     <Layout>
+      {showMapModal && (
+        <MapModal
+          close={handleMapModalClose}
+          location={{ longitude: futsal.longitude, latitude: futsal.latitude }}
+        />
+      )}
       <div className="py-2">
         {message}
         <div className="text-center mb-3">
@@ -101,7 +118,7 @@ const Profile = () => {
               <label htmlFor="floatingContact">Contact</label>
             </div>
             <div className="row">
-              <div className="col-md-6">
+              <div className="col-5">
                 <div className="form-floating mb-3">
                   <input
                     type="text"
@@ -122,7 +139,7 @@ const Profile = () => {
                   <label htmlFor="floatingDistrict">District</label>
                 </div>
               </div>
-              <div className="col-md-6">
+              <div className="col-5">
                 <div className="form-floating mb-3">
                   <input
                     type="text"
@@ -143,9 +160,17 @@ const Profile = () => {
                   <label htmlFor="floatingStreet">Street</label>
                 </div>
               </div>
+              <div className="col-2 mb-3">
+                <button
+                  className="btn btn-success w-100 h-100"
+                  onClick={() => setShowMapModal(true)}
+                >
+                  <i className="fa-solid fa-map-location-dot"></i>
+                </button>
+              </div>
             </div>
             <div className="row">
-              <div className="col-md-6">
+              <div className="col-sm-6">
                 <div className="form-floating mb-3">
                   <input
                     type="text"
@@ -163,7 +188,7 @@ const Profile = () => {
                   <label htmlFor="floatingOpensAt">Opens At</label>
                 </div>
               </div>
-              <div className="col-md-6">
+              <div className="col-sm-6">
                 <div className="form-floating mb-3">
                   <input
                     type="text"
@@ -183,18 +208,20 @@ const Profile = () => {
               </div>
             </div>
             <button
-              className="btn btn-primary form-control mb-3"
+              className="btn btn-primary form-control btn-lg mb-3"
               onClick={updateProfile}
             >
               Update Profile
             </button>
             <button
-              className="btn btn-secondary form-control"
-              onClick={() => setShow(true)}
+              className="btn btn-secondary form-control btn-lg"
+              onClick={() => setShowChangePasswordModal(true)}
             >
               Change Password
             </button>
-            {show && <ChangePasswordModal close={handleClose} />}
+            {showChangePasswordModal && (
+              <ChangePasswordModal close={handleChangePasswordModalClose} />
+            )}
           </div>
         </div>
       </div>

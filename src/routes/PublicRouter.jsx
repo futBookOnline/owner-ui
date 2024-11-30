@@ -10,6 +10,7 @@ import Reservation from "../pages/Reservation";
 import Customer from "../pages/Customer";
 import Event from "../pages/Event";
 import Profile from "../pages/Profile";
+import Onboard from "../pages/Onboard";
 
 const PublicRouter = () => {
   return (
@@ -17,6 +18,14 @@ const PublicRouter = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route
+        path="/onboard"
+        element={
+          <PrivateRouter>
+            <Onboard />
+          </PrivateRouter>
+        }
+      />
       <Route
         path="/slots"
         element={

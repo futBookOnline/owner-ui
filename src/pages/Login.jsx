@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useRelatedApi } from "../helpers/api.helper";
 
 const Login = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(null);
   const [error, setError] = useState(null);
   const handleSubmit = async () => {
@@ -13,21 +13,23 @@ const Login = () => {
       const response = await useRelatedApi("auth/login", "post", formData);
       if (response.success) {
         localStorage.setItem("userId", response.data._id);
-        navigate("/")
-      }
-      // else if (
-      //   response &&
-      //   response.error.toLowerCase() === "email is not active"
-      // ) {
-      //   setError(response.error);
-      //   const userIdResponse = await useRelatedApi("users/email", "post", {
-      //     email: formData.email,
-      //   });
-      //   if (userIdResponse.success) {
-      //     localStorage.setItem("userId", userIdResponse.data._id);
-      //   }
-      // }
-      else {
+
+        navigate("/");
+      } else if (!response.success && response.data) {
+        setError(response.message);
+        localStorage.setItem("userId", response.data);
+        sessionStorage.setItem("hasUserOnboarded", false);
+        setTimeout(() => {
+          navigate("/onboard");
+        }, 2000);
+
+        // const userIdResponse = await useRelatedApi("users/email", "post", {
+        //   email: formData.email,
+        // });
+        // if (userIdResponse.success) {
+        //   localStorage.setItem("userId", userIdResponse.data._id);
+        // }
+      } else {
         setError(response.error);
       }
     }
