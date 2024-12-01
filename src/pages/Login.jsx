@@ -13,7 +13,7 @@ const Login = () => {
       const response = await useRelatedApi("auth/login", "post", formData);
       if (response.success) {
         localStorage.setItem("userId", response.data._id);
-
+        sessionStorage.setItem("hasUserOnboarded", true);
         navigate("/");
       } else if (!response.success && response.data) {
         setError(response.message);

@@ -11,6 +11,7 @@ import Customer from "../pages/Customer";
 import Event from "../pages/Event";
 import Profile from "../pages/Profile";
 import Onboard from "../pages/Onboard";
+import ResetPassword from "../pages/ResetPassword";
 
 const PublicRouter = () => {
   return (
@@ -18,6 +19,7 @@ const PublicRouter = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/onboard"
         element={
